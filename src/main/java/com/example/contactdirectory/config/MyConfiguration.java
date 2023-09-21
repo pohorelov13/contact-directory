@@ -3,6 +3,7 @@ package com.example.contactdirectory.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 @Configuration

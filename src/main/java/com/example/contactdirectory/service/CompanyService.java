@@ -20,12 +20,15 @@ public class CompanyService {
     private final PhoneService phoneService;
 
 
+    //get all companies with persons and phone
     public List<Company> getAllCompany() {
         return repo.findAll();
     }
 
-    public Company addCompany(Company company) {
-        return repo.save(company);
+    public Company addCompany(Company company) throws ValidationException {
+        if (checkIsEmpty(company.getName())) {
+            throw new ValidationException("Назва компанії обов'язкове поле!");
+        } else return repo.save(company);
     }
 
     public Company deleteCompany(Long id) throws ValidationException {
@@ -38,13 +41,12 @@ public class CompanyService {
         String phoneNumber = phone.getPhoneNumber();
         if (checkIsEmpty(phoneNumber)) {
             throw new ValidationException("Номер телефону не може бути пустим");
+        } else if (!Validator.checkPhone(phoneNumber)) { //check is phone already exist in DB
+            throw new ValidationException("Помилковий формат номеру");
         } else if (phoneService.isPhoneExist(phoneNumber)) {
             throw new ValidationException("Номер телефону вже існує");
-        } else {
-            if (Validator.checkPhone(phoneNumber)) {
-                phone.addCompany(company);
-            } else throw new ValidationException("Помилковий формат номеру");
-        }
+            //check format
+        } else phone.addCompany(company);
     }
 
     public void addPerson(Company company, Person person) throws ValidationException {

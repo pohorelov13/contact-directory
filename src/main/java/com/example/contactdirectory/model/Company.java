@@ -20,10 +20,13 @@ public class Company extends BaseEntity {
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
     private Set<Phone> phoneList = new HashSet<>();
 
+
+    //if user didn't write description in DB should be null
     public void setDescription(String description) {
         this.description = Validator.checkIsEmpty(description) ? null : description;
     }
 
+    //return optional, because description may be null
     public Optional<String> getDescription() {
         return Optional.ofNullable(description);
     }

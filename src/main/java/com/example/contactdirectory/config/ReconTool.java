@@ -12,6 +12,6 @@ public class ReconTool implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        consoleInterface.render();
+        consoleInterface.start();
     }
 }

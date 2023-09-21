@@ -28,10 +28,12 @@ public class Person extends BaseEntity {
         return Optional.ofNullable(fatherName);
     }
 
+
     public void setFatherName(String fatherName) {
         this.fatherName = Validator.checkIsEmpty(fatherName) ? null : fatherName;
     }
 
+    //helper method
     public void addCompany(Company company) {
         this.company = company;
         company.getContactPersons().add(this);

@@ -20,7 +20,8 @@ public class ConsoleInterface implements GuInterface {
     private final CompanyService service;
 
 
-    public void render() {
+    @Override
+    public void start() {
         boolean isExit = false;
         System.out.println("КОНТАКТНИЙ ДОВІДНИК");
         while (!isExit) {
@@ -42,7 +43,6 @@ public class ConsoleInterface implements GuInterface {
                 default -> System.out.println("Помилкова команда");
             }
         }
-        scanner.close();
     }
 
     private void deleteCompany() {
@@ -66,21 +66,22 @@ public class ConsoleInterface implements GuInterface {
         System.out.print("Введіть назву: ");
         String name = scanner.nextLine();
 
-        if (checkIsEmpty(name)) {
-            System.out.println("Назва компанії обов'язкове поле!");
-        } else {
-            System.out.print("Введіть опис: ");
-            String description = scanner.nextLine();
+        System.out.print("Введіть опис: ");
+        String description = scanner.nextLine();
 
-            company.setName(name);
-            company.setDescription(description);
+        company.setName(name);
+        company.setDescription(description);
 
-            getAddMenu(company);
+        getAddMenu(company);
 
+        try {
             service.addCompany(company);
-            System.out.println("Додана компанія\n");
-            showCompanyDetails(company);
+        } catch (ValidationException e) {
+            System.out.println(e.getMessage());
         }
+
+        System.out.println("Додана компанія\n");
+        showCompanyDetails(company);
     }
 
     private void getAddMenu(Company company) {
@@ -95,32 +96,31 @@ public class ConsoleInterface implements GuInterface {
                     >""");
 
             String enteredCode = scanner.nextLine();
-
-            switch (enteredCode) {
-                case "1" -> createPerson(company);
-                case "2" -> createPhone(company);
-                case "3" -> isExit = true;
-                default -> System.out.println("Неправильне значення");
+            try {
+                switch (enteredCode) {
+                    case "1" -> createPerson(company);
+                    case "2" -> createPhone(company);
+                    case "3" -> isExit = true;
+                    default -> System.out.println("Неправильне значення");
+                }
+            } catch (ValidationException e) {
+                System.out.println(e.getMessage());
             }
         }
     }
 
-    private void createPhone(Company company) {
+    private void createPhone(Company company) throws ValidationException {
         Phone phone = new Phone();
         System.out.print("Введіть номер телефону: ");
         String phoneNumber = scanner.nextLine();
 
         phone.setPhoneNumber(phoneNumber);
 
-        try {
-            service.addPhone(company, phone);
-        } catch (ValidationException e) {
-            System.out.println(e.getMessage());
-        }
+        service.addPhone(company, phone);
     }
 
 
-    private void createPerson(Company company) {
+    private void createPerson(Company company) throws ValidationException {
         Person person = new Person();
 
         System.out.print("Введіть прізвище: ");
@@ -136,11 +136,8 @@ public class ConsoleInterface implements GuInterface {
         person.setFirstName(firstName);
         person.setFatherName(fatherName);
 
-        try {
-            service.addPerson(company, person);
-        } catch (ValidationException e) {
-            System.out.println(e.getMessage());
-        }
+        service.addPerson(company, person);
+
     }
 
 

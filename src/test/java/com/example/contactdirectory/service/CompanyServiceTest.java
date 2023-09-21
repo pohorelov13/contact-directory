@@ -1,328 +1,245 @@
 package com.example.contactdirectory.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.example.contactdirectory.exceptions.ValidationException;
 import com.example.contactdirectory.model.Company;
 import com.example.contactdirectory.model.Person;
 import com.example.contactdirectory.model.Phone;
 import com.example.contactdirectory.repo.CompanyRepo;
-
-import java.util.ArrayList;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@ContextConfiguration(classes = {CompanyService.class})
+import java.util.ArrayList;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 @ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = {CompanyService.class})
 class CompanyServiceTest {
     @MockBean
-    private CompanyRepo companyRepo;
-
-    @Autowired
-    private CompanyService companyService;
+    private CompanyRepo repo;
 
     @MockBean
     private PhoneService phoneService;
 
+    @Autowired
+    private CompanyService service;
+
     /**
      * Method under test: {@link CompanyService#getAllCompany()}
      */
+
     @Test
-    void testGetAllCompany() {
-        ArrayList<Company> companyList = new ArrayList<>();
-        when(companyRepo.findAll()).thenReturn(companyList);
-        List<Company> actualAllCompany = companyService.getAllCompany();
-        assertSame(companyList, actualAllCompany);
-        assertTrue(actualAllCompany.isEmpty());
-        verify(companyRepo).findAll();
+    void getAllCompanyTest() {
+        when(repo.findAll()).thenReturn(new ArrayList<>());
+        service.getAllCompany();
+        verify(repo, times(1)).findAll();
     }
 
     /**
      * Method under test: {@link CompanyService#addCompany(Company)}
      */
-    @Test
-    void testAddCompany() {
-        Company company = new Company();
-        company.setDescription("The characteristics of someone or something");
-        company.setId(1L);
-        company.setName("Name");
-        when(companyRepo.save(Mockito.<Company>any())).thenReturn(company);
 
-        Company company2 = new Company();
-        company2.setDescription("The characteristics of someone or something");
-        company2.setId(1L);
-        company2.setName("Name");
-        assertSame(company, companyService.addCompany(company2));
-        verify(companyRepo).save(Mockito.<Company>any());
+    @Test
+    void addCompanyWhenNameNotEmptyTest() throws ValidationException {
+        Company company = new Company();
+        company.setName("Test");
+
+        Company companyAfter = new Company();
+        companyAfter.setName("Test");
+        companyAfter.setId(1L);
+
+        when(repo.save(company)).thenReturn(companyAfter);
+        Company addedCompany = service.addCompany(company);
+
+        assertEquals(companyAfter, addedCompany);
+    }
+
+    /**
+     * Method under test: {@link CompanyService#addCompany(Company)}
+     */
+
+    @Test
+    void addCompanyWhenNameEmptyTest() {
+        Company company = new Company();
+        company.setName("");
+
+        ValidationException exception = assertThrows(ValidationException.class, () -> service.addCompany(company));
+        assertEquals("Назва компанії обов'язкове поле!", exception.getMessage());
+        verify(repo, times(0)).save(any());
+
+
     }
 
     /**
      * Method under test: {@link CompanyService#deleteCompany(Long)}
      */
+
     @Test
-    void testDeleteCompany() throws ValidationException {
+    void deleteCompanyWhenExistTest() throws ValidationException {
         Company company = new Company();
-        company.setDescription("The characteristics of someone or something");
+        company.setName("Test");
         company.setId(1L);
-        company.setName("Name");
-        Optional<Company> ofResult = Optional.of(company);
-        doNothing().when(companyRepo).delete(Mockito.<Company>any());
-        when(companyRepo.findById(Mockito.<Long>any())).thenReturn(ofResult);
-        assertSame(company, companyService.deleteCompany(1L));
-        verify(companyRepo).findById(Mockito.<Long>any());
-        verify(companyRepo).delete(Mockito.<Company>any());
+
+        when(repo.findById(1L)).thenReturn(Optional.of(company));
+        doNothing().when(repo).delete(company);
+
+        Company deletedCompany = service.deleteCompany(1L);
+
+        assertEquals(company, deletedCompany);
     }
 
     /**
      * Method under test: {@link CompanyService#deleteCompany(Long)}
      */
-    @Test
-    void testDeleteCompany2() throws ValidationException {
-        Optional<Company> emptyResult = Optional.empty();
-        when(companyRepo.findById(Mockito.<Long>any())).thenReturn(emptyResult);
-        assertThrows(ValidationException.class, () -> companyService.deleteCompany(1L));
-        verify(companyRepo).findById(Mockito.<Long>any());
-    }
 
-    /**
-     * Method under test: {@link CompanyService#addPhone(Company, Phone)}
-     */
     @Test
-    void testAddPhone() throws ValidationException {
-        when(phoneService.isPhoneExist(Mockito.<String>any())).thenReturn(true);
-
+    void deleteCompanyWhenNotExistTest() {
         Company company = new Company();
-        company.setDescription("The characteristics of someone or something");
+        company.setName("Test");
         company.setId(1L);
-        company.setName("Name");
 
-        Company company2 = new Company();
-        company2.setDescription("The characteristics of someone or something");
-        company2.setId(1L);
-        company2.setName("Name");
+        when(repo.findById(1L)).thenReturn(Optional.empty());
 
-        Phone phone = new Phone();
-        phone.setCompany(company2);
-        phone.setId(1L);
-        phone.setPhoneNumber("6625550144");
-        assertThrows(ValidationException.class, () -> companyService.addPhone(company, phone));
-        verify(phoneService).isPhoneExist(Mockito.<String>any());
-    }
-
-    /**
-     * Method under test: {@link CompanyService#addPhone(Company, Phone)}
-     */
-    @Test
-    void testAddPhone2() throws ValidationException {
-        when(phoneService.isPhoneExist(Mockito.<String>any())).thenReturn(false);
-
-        Company company = new Company();
-        company.setDescription("The characteristics of someone or something");
-        company.setId(1L);
-        company.setName("Name");
-
-        Company company2 = new Company();
-        company2.setDescription("The characteristics of someone or something");
-        company2.setId(1L);
-        company2.setName("Name");
-
-        Phone phone = new Phone();
-        phone.setCompany(company2);
-        phone.setId(1L);
-        phone.setPhoneNumber("6625550144");
-        companyService.addPhone(company, phone);
-        verify(phoneService).isPhoneExist(Mockito.<String>any());
-        assertEquals(1, company.getPhoneList().size());
-        assertSame(company, phone.getCompany());
-    }
-
-    /**
-     * Method under test: {@link CompanyService#addPhone(Company, Phone)}
-     */
-    @Test
-    void testAddPhone3() throws ValidationException {
-        Company company = new Company();
-        company.setDescription("The characteristics of someone or something");
-        company.setId(1L);
-        company.setName("Name");
-
-        Company company2 = new Company();
-        company2.setDescription("The characteristics of someone or something");
-        company2.setId(1L);
-        company2.setName("Name");
-        Phone phone = mock(Phone.class);
-        when(phone.getPhoneNumber()).thenReturn("");
-        doNothing().when(phone).setId(Mockito.<Long>any());
-        doNothing().when(phone).setCompany(Mockito.<Company>any());
-        doNothing().when(phone).setPhoneNumber(Mockito.<String>any());
-        phone.setCompany(company2);
-        phone.setId(1L);
-        phone.setPhoneNumber("6625550144");
-        assertThrows(ValidationException.class, () -> companyService.addPhone(company, phone));
-        verify(phone).getPhoneNumber();
-        verify(phone).setId(Mockito.<Long>any());
-        verify(phone).setCompany(Mockito.<Company>any());
-        verify(phone).setPhoneNumber(Mockito.<String>any());
+        ValidationException r = assertThrows(ValidationException.class, () -> service.deleteCompany(1L));
+        assertEquals(r.getMessage(), "Компанії з даним ID не існує");
+        verify(repo, times(0)).delete(any());
     }
 
     /**
      * Method under test: {@link CompanyService#addPerson(Company, Person)}
      */
-    @Test
-    void testAddPerson() throws ValidationException {
-        Company company = new Company();
-        company.setDescription("The characteristics of someone or something");
-        company.setId(1L);
-        company.setName("Name");
 
-        Company company2 = new Company();
-        company2.setDescription("The characteristics of someone or something");
-        company2.setId(1L);
-        company2.setName("Name");
+    @Test
+    void addPersonWhenFirstNameAndLastNameNotEmpty() throws ValidationException {
+        Company company = new Company();
+        company.setName("Test");
 
         Person person = new Person();
-        person.setCompany(company2);
-        person.setFatherName("Father Name");
-        person.setFirstName("Jane");
-        person.setId(1L);
-        person.setLastName("Doe");
-        companyService.addPerson(company, person);
-        assertEquals(1, company.getContactPersons().size());
-        assertSame(company, person.getCompany());
+        person.setFirstName("Bohdan");
+        person.setLastName("Pohorelov");
+
+        service.addPerson(company, person);
+
+        assertEquals(company.getContactPersons().stream().findFirst().orElse(new Person()), person);
+        assertEquals(person.getCompany(), company);
+
     }
 
     /**
-     * Method under test: {@link CompanyService#addPerson(Company, Person)}
+     * Method under test: {@link CompanyService#deleteCompany(Long)}
      */
-    @Test
-    void testAddPerson2() throws ValidationException {
-        Company company = mock(Company.class);
-        when(company.getContactPersons()).thenReturn(new HashSet<>());
-        doNothing().when(company).setId(Mockito.<Long>any());
-        doNothing().when(company).setDescription(Mockito.<String>any());
-        doNothing().when(company).setName(Mockito.<String>any());
-        company.setDescription("The characteristics of someone or something");
-        company.setId(1L);
-        company.setName("Name");
 
-        Company company2 = new Company();
-        company2.setDescription("The characteristics of someone or something");
-        company2.setId(1L);
-        company2.setName("Name");
+    @Test
+    void addPersonWhenFirstNameEmptyAndLastNameNotEmptyTest() {
+        Company company = new Company();
+        company.setName("Test");
 
         Person person = new Person();
-        person.setCompany(company2);
-        person.setFatherName("Father Name");
-        person.setFirstName("Jane");
-        person.setId(1L);
-        person.setLastName("Doe");
-        companyService.addPerson(company, person);
-        verify(company).getContactPersons();
-        verify(company).setId(Mockito.<Long>any());
-        verify(company).setDescription(Mockito.<String>any());
-        verify(company).setName(Mockito.<String>any());
-        assertSame(company, person.getCompany());
+        person.setFirstName("");
+        person.setLastName("Pohorelov");
+
+        ValidationException exception = assertThrows(ValidationException.class, () -> service.addPerson(company, person));
+
+        assertEquals("Прізвище та ім'я обов'язкові поля!", exception.getMessage());
     }
 
     /**
-     * Method under test: {@link CompanyService#addPerson(Company, Person)}
+     * Method under test: {@link CompanyService#addPhone(Company, Phone)}
      */
-    @Test
-    void testAddPerson3() throws ValidationException {
-        Company company = mock(Company.class);
-        doNothing().when(company).setId(Mockito.<Long>any());
-        doNothing().when(company).setDescription(Mockito.<String>any());
-        doNothing().when(company).setName(Mockito.<String>any());
-        company.setDescription("The characteristics of someone or something");
-        company.setId(1L);
-        company.setName("Name");
 
-        Company company2 = new Company();
-        company2.setDescription("The characteristics of someone or something");
-        company2.setId(1L);
-        company2.setName("Name");
-        Person person = mock(Person.class);
-        when(person.getFirstName()).thenReturn("");
-        when(person.getLastName()).thenReturn("Doe");
-        doNothing().when(person).setId(Mockito.<Long>any());
-        doNothing().when(person).setCompany(Mockito.<Company>any());
-        doNothing().when(person).setFatherName(Mockito.<String>any());
-        doNothing().when(person).setFirstName(Mockito.<String>any());
-        doNothing().when(person).setLastName(Mockito.<String>any());
-        person.setCompany(company2);
-        person.setFatherName("Father Name");
-        person.setFirstName("Jane");
-        person.setId(1L);
-        person.setLastName("Doe");
-        assertThrows(ValidationException.class, () -> companyService.addPerson(company, person));
-        verify(company).setId(Mockito.<Long>any());
-        verify(company).setDescription(Mockito.<String>any());
-        verify(company).setName(Mockito.<String>any());
-        verify(person).getFirstName();
-        verify(person).getLastName();
-        verify(person).setId(Mockito.<Long>any());
-        verify(person).setCompany(Mockito.<Company>any());
-        verify(person).setFatherName(Mockito.<String>any());
-        verify(person).setFirstName(Mockito.<String>any());
-        verify(person).setLastName(Mockito.<String>any());
+    @Test
+    void addPhoneWhenNumberValidAndNotExistInDB() throws ValidationException {
+        Company company = new Company();
+        company.setName("Test");
+
+        Phone phone = new Phone();
+        phone.setPhoneNumber("+380999283122");
+
+        when(phoneService.isPhoneExist(phone.getPhoneNumber())).thenReturn(false);
+        service.addPhone(company, phone);
+
+        assertEquals(phone, company.getPhoneList().stream().findFirst().orElse(new Phone()));
+        assertEquals(company, phone.getCompany());
     }
 
     /**
-     * Method under test: {@link CompanyService#addPerson(Company, Person)}
+     * Method under test: {@link CompanyService#deleteCompany(Long)}
      */
-    @Test
-    void testAddPerson4() throws ValidationException {
-        Company company = mock(Company.class);
-        doNothing().when(company).setId(Mockito.<Long>any());
-        doNothing().when(company).setDescription(Mockito.<String>any());
-        doNothing().when(company).setName(Mockito.<String>any());
-        company.setDescription("The characteristics of someone or something");
-        company.setId(1L);
-        company.setName("Name");
 
-        Company company2 = new Company();
-        company2.setDescription("The characteristics of someone or something");
-        company2.setId(1L);
-        company2.setName("Name");
-        Person person = mock(Person.class);
-        when(person.getLastName()).thenReturn("");
-        doNothing().when(person).setId(Mockito.<Long>any());
-        doNothing().when(person).setCompany(Mockito.<Company>any());
-        doNothing().when(person).setFatherName(Mockito.<String>any());
-        doNothing().when(person).setFirstName(Mockito.<String>any());
-        doNothing().when(person).setLastName(Mockito.<String>any());
-        person.setCompany(company2);
-        person.setFatherName("Father Name");
-        person.setFirstName("Jane");
-        person.setId(1L);
-        person.setLastName("Doe");
-        assertThrows(ValidationException.class, () -> companyService.addPerson(company, person));
-        verify(company).setId(Mockito.<Long>any());
-        verify(company).setDescription(Mockito.<String>any());
-        verify(company).setName(Mockito.<String>any());
-        verify(person).getLastName();
-        verify(person).setId(Mockito.<Long>any());
-        verify(person).setCompany(Mockito.<Company>any());
-        verify(person).setFatherName(Mockito.<String>any());
-        verify(person).setFirstName(Mockito.<String>any());
-        verify(person).setLastName(Mockito.<String>any());
+    @Test
+    void addPhoneWhenNumberValidExistInDB() {
+        Company company = new Company();
+        company.setName("Test");
+
+        Phone phone = new Phone();
+        phone.setPhoneNumber("+380999283122");
+
+        checkMessage(phone, company, "Номер телефону вже існує");
+
+
+    }
+
+    /**
+     * Method under test: {@link CompanyService#deleteCompany(Long)}
+     */
+
+    @Test
+    void addPhoneWhenNumberIsEmpty() {
+        Company company = new Company();
+        company.setName("Test");
+
+        Phone phone = new Phone();
+        phone.setPhoneNumber("");
+
+        checkMessage(phone, company, "Номер телефону не може бути пустим");
+
+    }
+
+    /**
+     * Method under test: {@link CompanyService#deleteCompany(Long)}
+     */
+
+    @Test
+    void addPhoneWhenNumberIsNotValid() {
+        Company company = new Company();
+        company.setName("Test");
+
+        Phone phone = new Phone();
+        phone.setPhoneNumber("number");
+
+        checkMessage(phone, company, "Помилковий формат номеру");
+
+    }
+
+    /**
+     * Method under test: {@link CompanyService#deleteCompany(Long)}
+     */
+
+    @Test
+    void addPhoneWhenNumberIsStartWithZero() {
+        Company company = new Company();
+        company.setName("Test");
+
+        Phone phone = new Phone();
+        phone.setPhoneNumber("0999283122");
+
+        checkMessage(phone, company, "Помилковий формат номеру");
+
+    }
+
+    private void checkMessage(Phone phone, Company company, String expected) {
+        when(phoneService.isPhoneExist(phone.getPhoneNumber())).thenReturn(true);
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> service.addPhone(company, phone));
+        assertEquals(expected, exception.getMessage());
+
+        assertEquals(company.getPhoneList().size(), 0);
+        assertNull(phone.getCompany());
     }
 }
-
