@@ -1,15 +1,15 @@
 package com.example.contactdirectory.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import com.example.contactdirectory.util.Validator;
+import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Entity
 @Data
+@Table(name = "persons")
 public class Person extends BaseEntity {
     @Column(nullable = false)
     private String lastName;
@@ -27,4 +27,28 @@ public class Person extends BaseEntity {
     public Optional<String> getFatherName() {
         return Optional.ofNullable(fatherName);
     }
+
+    public void setFatherName(String fatherName) {
+        this.fatherName = Validator.checkIsEmpty(fatherName) ? null : fatherName;
+    }
+
+    public void addCompany(Company company) {
+        this.company = company;
+        company.getContactPersons().add(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        Person person = (Person) o;
+        return Objects.equals(lastName, person.lastName) && Objects.equals(firstName, person.firstName) && Objects.equals(fatherName, person.fatherName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), lastName, firstName, fatherName);
+    }
 }
+
