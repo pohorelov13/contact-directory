@@ -1,4 +1,4 @@
-package com.example.contactdirectory;
+package com.example.contactdirectory.GUI;
 
 import com.example.contactdirectory.exceptions.ValidationException;
 import com.example.contactdirectory.model.Company;
@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Scanner;
 
-import static com.example.contactdirectory.util.Validator.checkIsEmpty;
 
 @RequiredArgsConstructor
 @Component

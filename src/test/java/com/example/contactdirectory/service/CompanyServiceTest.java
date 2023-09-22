@@ -5,6 +5,7 @@ import com.example.contactdirectory.model.Company;
 import com.example.contactdirectory.model.Person;
 import com.example.contactdirectory.model.Phone;
 import com.example.contactdirectory.repo.CompanyRepo;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,15 +31,34 @@ class CompanyServiceTest {
     @Autowired
     private CompanyService service;
 
+    private Company company;
+    private Person person;
+    private Phone phone;
+
+    @BeforeEach
+    void setUp() {
+        company = new Company();
+        company.setName("Test");
+
+        phone = new Phone();
+        phone.setPhoneNumber("+380999283122");
+
+        person = new Person();
+        person.setFirstName("Bohdan");
+        person.setLastName("Pohorelov");
+
+    }
+
     /**
      * Method under test: {@link CompanyService#getAllCompany()}
      */
 
+
     @Test
     void getAllCompanyTest() {
-        when(repo.findAll()).thenReturn(new ArrayList<>());
+        when(repo.findAllCompaniesWithPersonsAndPhones()).thenReturn(new ArrayList<>());
         service.getAllCompany();
-        verify(repo, times(1)).findAll();
+        verify(repo, times(1)).findAllCompaniesWithPersonsAndPhones();
     }
 
     /**
@@ -47,17 +67,10 @@ class CompanyServiceTest {
 
     @Test
     void addCompanyWhenNameNotEmptyTest() throws ValidationException {
-        Company company = new Company();
-        company.setName("Test");
-
-        Company companyAfter = new Company();
-        companyAfter.setName("Test");
-        companyAfter.setId(1L);
-
-        when(repo.save(company)).thenReturn(companyAfter);
+        when(repo.save(company)).thenReturn(company);
         Company addedCompany = service.addCompany(company);
-
-        assertEquals(companyAfter, addedCompany);
+        verify(repo, times(1)).save(company);
+        assertEquals(company, addedCompany);
     }
 
     /**
@@ -66,13 +79,12 @@ class CompanyServiceTest {
 
     @Test
     void addCompanyWhenNameEmptyTest() {
-        Company company = new Company();
+
         company.setName("");
 
         ValidationException exception = assertThrows(ValidationException.class, () -> service.addCompany(company));
         assertEquals("Назва компанії обов'язкове поле!", exception.getMessage());
         verify(repo, times(0)).save(any());
-
 
     }
 
@@ -82,8 +94,7 @@ class CompanyServiceTest {
 
     @Test
     void deleteCompanyWhenExistTest() throws ValidationException {
-        Company company = new Company();
-        company.setName("Test");
+
         company.setId(1L);
 
         when(repo.findById(1L)).thenReturn(Optional.of(company));
@@ -100,8 +111,7 @@ class CompanyServiceTest {
 
     @Test
     void deleteCompanyWhenNotExistTest() {
-        Company company = new Company();
-        company.setName("Test");
+
         company.setId(1L);
 
         when(repo.findById(1L)).thenReturn(Optional.empty());
@@ -117,12 +127,6 @@ class CompanyServiceTest {
 
     @Test
     void addPersonWhenFirstNameAndLastNameNotEmpty() throws ValidationException {
-        Company company = new Company();
-        company.setName("Test");
-
-        Person person = new Person();
-        person.setFirstName("Bohdan");
-        person.setLastName("Pohorelov");
 
         service.addPerson(company, person);
 
@@ -137,14 +141,11 @@ class CompanyServiceTest {
 
     @Test
     void addPersonWhenFirstNameEmptyAndLastNameNotEmptyTest() {
-        Company company = new Company();
-        company.setName("Test");
 
-        Person person = new Person();
         person.setFirstName("");
-        person.setLastName("Pohorelov");
 
-        ValidationException exception = assertThrows(ValidationException.class, () -> service.addPerson(company, person));
+        ValidationException exception = assertThrows(ValidationException.class,
+                () -> service.addPerson(company, person));
 
         assertEquals("Прізвище та ім'я обов'язкові поля!", exception.getMessage());
     }
@@ -155,11 +156,6 @@ class CompanyServiceTest {
 
     @Test
     void addPhoneWhenNumberValidAndNotExistInDB() throws ValidationException {
-        Company company = new Company();
-        company.setName("Test");
-
-        Phone phone = new Phone();
-        phone.setPhoneNumber("+380999283122");
 
         when(phoneService.isPhoneExist(phone.getPhoneNumber())).thenReturn(false);
         service.addPhone(company, phone);
@@ -174,14 +170,8 @@ class CompanyServiceTest {
 
     @Test
     void addPhoneWhenNumberValidExistInDB() {
-        Company company = new Company();
-        company.setName("Test");
 
-        Phone phone = new Phone();
-        phone.setPhoneNumber("+380999283122");
-
-        checkMessage(phone, company, "Номер телефону вже існує");
-
+        checkMessage(phone, company, "Номер телефону вже існує", true);
 
     }
 
@@ -191,13 +181,10 @@ class CompanyServiceTest {
 
     @Test
     void addPhoneWhenNumberIsEmpty() {
-        Company company = new Company();
-        company.setName("Test");
 
-        Phone phone = new Phone();
         phone.setPhoneNumber("");
 
-        checkMessage(phone, company, "Номер телефону не може бути пустим");
+        checkMessage(phone, company, "Номер телефону не може бути пустим", false);
 
     }
 
@@ -207,13 +194,10 @@ class CompanyServiceTest {
 
     @Test
     void addPhoneWhenNumberIsNotValid() {
-        Company company = new Company();
-        company.setName("Test");
 
-        Phone phone = new Phone();
         phone.setPhoneNumber("number");
 
-        checkMessage(phone, company, "Помилковий формат номеру");
+        checkMessage(phone, company, "Помилковий формат номеру", false);
 
     }
 
@@ -223,18 +207,13 @@ class CompanyServiceTest {
 
     @Test
     void addPhoneWhenNumberIsStartWithZero() {
-        Company company = new Company();
-        company.setName("Test");
-
-        Phone phone = new Phone();
         phone.setPhoneNumber("0999283122");
-
-        checkMessage(phone, company, "Помилковий формат номеру");
+        checkMessage(phone, company, "Помилковий формат номеру", false);
 
     }
 
-    private void checkMessage(Phone phone, Company company, String expected) {
-        when(phoneService.isPhoneExist(phone.getPhoneNumber())).thenReturn(true);
+    private void checkMessage(Phone phone, Company company, String expected, boolean isExist) {
+        when(phoneService.isPhoneExist(phone.getPhoneNumber())).thenReturn(isExist);
         ValidationException exception = assertThrows(ValidationException.class,
                 () -> service.addPhone(company, phone));
         assertEquals(expected, exception.getMessage());

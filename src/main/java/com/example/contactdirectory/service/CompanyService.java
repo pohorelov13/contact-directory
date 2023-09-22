@@ -22,7 +22,7 @@ public class CompanyService {
 
     //get all companies with persons and phone
     public List<Company> getAllCompany() {
-        return repo.findAll();
+        return repo.findAllCompaniesWithPersonsAndPhones();
     }
 
     public Company addCompany(Company company) throws ValidationException {
