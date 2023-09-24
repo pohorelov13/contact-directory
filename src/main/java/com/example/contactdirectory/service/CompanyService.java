@@ -21,7 +21,7 @@ public class CompanyService {
 
 
     //get all companies with persons and phone
-    public List<Company> getAllCompany() {
+    public List<Company> getAllCompanies() {
         return repo.findAllCompaniesWithPersonsAndPhones();
     }
 

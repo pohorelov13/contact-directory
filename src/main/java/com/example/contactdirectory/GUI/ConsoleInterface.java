@@ -141,7 +141,7 @@ public class ConsoleInterface implements GuInterface {
 
 
     private void showCompanies() {
-        List<Company> allCompany = service.getAllCompany();
+        List<Company> allCompany = service.getAllCompanies();
         if (allCompany.isEmpty()) {
             System.out.println("Ще не додано жодної компанії");
         } else {

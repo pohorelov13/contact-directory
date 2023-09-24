@@ -3,6 +3,7 @@ package com.example.contactdirectory.model;
 import com.example.contactdirectory.util.Validator;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -10,6 +11,7 @@ import java.util.Optional;
 @Entity
 @Data
 @Table(name = "persons")
+@ToString(exclude = "company")
 public class Person extends BaseEntity {
     @Column(nullable = false)
     private String lastName;
@@ -45,7 +47,10 @@ public class Person extends BaseEntity {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         Person person = (Person) o;
-        return Objects.equals(lastName, person.lastName) && Objects.equals(firstName, person.firstName) && Objects.equals(fatherName, person.fatherName);
+        return Objects.equals(lastName, person.lastName)
+                && Objects.equals(firstName, person.firstName)
+                && Objects.equals(id, person.getId())
+                && Objects.equals(fatherName, person.fatherName);
     }
 
     @Override

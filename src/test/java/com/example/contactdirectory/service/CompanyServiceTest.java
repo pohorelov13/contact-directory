@@ -50,14 +50,14 @@ class CompanyServiceTest {
     }
 
     /**
-     * Method under test: {@link CompanyService#getAllCompany()}
+     * Method under test: {@link CompanyService#getAllCompanies()}
      */
 
 
     @Test
     void getAllCompanyTest() {
         when(repo.findAllCompaniesWithPersonsAndPhones()).thenReturn(new ArrayList<>());
-        service.getAllCompany();
+        service.getAllCompanies();
         verify(repo, times(1)).findAllCompaniesWithPersonsAndPhones();
     }
 
