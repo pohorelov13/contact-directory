@@ -36,6 +36,6 @@ public class Phone extends BaseEntity {
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), phoneNumber);
+        return Objects.hash(phoneNumber);
     }
 }

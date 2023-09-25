@@ -8,7 +8,7 @@ public class Validator {
     //check is String empty
     public static boolean checkIsEmpty(String... fields) {
         for (String field : fields) {
-            if (field.isBlank() || field.isEmpty()) {
+            if (field == null || field.isBlank() || field.isEmpty()) {
                 return true;
             }
         }

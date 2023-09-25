@@ -49,13 +49,12 @@ public class Person extends BaseEntity {
         Person person = (Person) o;
         return Objects.equals(lastName, person.lastName)
                 && Objects.equals(firstName, person.firstName)
-                && Objects.equals(id, person.getId())
                 && Objects.equals(fatherName, person.fatherName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), lastName, firstName, fatherName);
+        return Objects.hash(lastName, firstName, fatherName);
     }
 }
 

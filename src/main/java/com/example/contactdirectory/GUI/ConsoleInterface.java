@@ -75,12 +75,13 @@ public class ConsoleInterface implements GuInterface {
 
         try {
             service.addCompany(company);
+            System.out.println("Додана компанія\n");
+            showCompanyDetails(company);
         } catch (ValidationException e) {
             System.out.println(e.getMessage());
         }
 
-        System.out.println("Додана компанія\n");
-        showCompanyDetails(company);
+
     }
 
     private void getAddMenu(Company company) {

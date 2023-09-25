@@ -21,7 +21,7 @@ CREATE TABLE phones
 (
     id           bigint       NOT NULL AUTO_INCREMENT,
     phone_number varchar(255) NOT NULL,
-    company_id   bigint,
+    company_id   bigint NOT NULL,
     CONSTRAINT PK_phones PRIMARY KEY (id),
     CONSTRAINT UQ_phones_phone_number UNIQUE KEY (phone_number),
     CONSTRAINT FK_phones_companies FOREIGN KEY (company_id) REFERENCES companies (id)
